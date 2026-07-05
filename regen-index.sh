@@ -1,26 +1,23 @@
 #!/usr/bin/env bash
 
-set -o errexit
 set -o nounset
 
-cd $(dirname $0)
+cd "$(dirname "$0")" || exit 1
 
-echo -e "# Index\n" > index.md
+{
+    echo -e "# Index\n"
 
-echo -e "## Folien\n" >> index.md
+    echo -e "## Folien\n"
 
-find -type f ! -empty | xargs git ls-files -z | tr '\0' '\n' | \
-  grep -vE "README.md|index.md" | grep -E "\.(pdf|html|md|txt)$" | \
-  sed -E "s/(.*)/- [\1](\1)/" >> index.md
+    git ls-files --format='- [%(path)](%(path))' -- . \
+        ':!:README.md' ':!:index.md' |
+        grep -E "\.(pdf|html|md|txt))$"
 
-echo -e "\n## Downloads\n" >> index.md
-# Section for everything that a web browser cannot display natively
+    echo -e "\n## Downloads\n"
 
-find -type f ! -empty | xargs git ls-files -z | tr '\0' '\n' | \
-  grep -E "\.(hs|cast|tar.gz|zip)$" | \
-  sed -E "s/(.*)/- [\1](\1)/" >> index.md
+    # Section for everything that a web browser cannot display natively
+    git ls-files --format='- [%(path)](%(path))' -- . | \
+        grep -E "\.(hs|cast|tar.gz|zip))$"
 
-cat <<EOF >> index.md
-
-## Sonstiges
-EOF
+    echo -e "\n## Sonstiges"
+} > index.md
